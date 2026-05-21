@@ -1,297 +1,67 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админ-панель | Стрижка Бот</title>
+    <title>Админ-панель</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            font-family: Arial;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             padding: 20px;
-        }
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
+            color: white;
         }
         .card {
             background: white;
+            color: black;
             border-radius: 20px;
             padding: 20px;
             margin-bottom: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-        }
-        h1, h2, h3 {
-            color: #333;
-            margin-bottom: 15px;
-        }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .stat-card {
-            background: #f0f0f0;
-            border-radius: 15px;
-            padding: 15px;
-            text-align: center;
-        }
-        .stat-number {
-            font-size: 32px;
-            font-weight: bold;
-            color: #667eea;
-        }
-        .stat-label {
-            color: #666;
-            font-size: 12px;
-            margin-top: 5px;
         }
         button {
             background: #667eea;
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 25px;
-            font-size: 16px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
-        }
-        button:active {
-            background: #5a67d8;
-            transform: scale(0.98);
-        }
-        .booking-item {
-            background: #f9f9f9;
-            border-radius: 15px;
             padding: 12px;
-            margin-bottom: 10px;
+            border-radius: 25px;
+            width: 100%;
+            cursor: pointer;
+            font-size: 16px;
         }
-        .booking-date {
+        .stat {
+            font-size: 32px;
             font-weight: bold;
             color: #667eea;
-        }
-        .booking-time {
-            color: #666;
-            font-size: 14px;
-        }
-        .booking-user {
-            color: #999;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-        .loading {
             text-align: center;
-            padding: 20px;
-            color: #999;
-        }
-        .hidden {
-            display: none;
-        }
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .tab {
-            flex: 1;
-            background: white;
-            border: none;
-            padding: 12px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .tab.active {
-            background: white;
-            color: #667eea;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .footer {
-            text-align: center;
-            color: white;
-            font-size: 12px;
-            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <h1>🌸 Админ-панель</h1>
-            <p>Управление записями на стрижку</p>
-        </div>
-        
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('stats')">📊 Статистика</button>
-            <button class="tab" onclick="switchTab('bookings')">📋 Записи</button>
-            <button class="tab" onclick="switchTab('dates')">📅 По датам</button>
-        </div>
-        
-        <div id="stats-tab">
-            <div class="card">
-                <h3>Статистика</h3>
-                <div class="stats">
-                    <div class="stat-card">
-                        <div class="stat-number" id="total-bookings">-</div>
-                        <div class="stat-label">Всего записей</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="unique-clients">-</div>
-                        <div class="stat-label">Клиентов</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="upcoming">-</div>
-                        <div class="stat-label">Предстоящих</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="past">-</div>
-                        <div class="stat-label">Прошедших</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div id="bookings-tab" class="hidden">
-            <div class="card">
-                <h3>Все записи</h3>
-                <div id="bookings-list" class="loading">Загрузка...</div>
-            </div>
-        </div>
-        
-        <div id="dates-tab" class="hidden">
-            <div class="card">
-                <h3>Записи по датам</h3>
-                <div id="dates-list" class="loading">Загрузка...</div>
-            </div>
-        </div>
-        
-        <button onclick="refreshData()">🔄 Обновить</button>
-        
-        <div class="footer">
-            💕 Стрижка Бот | Всегда рады вам!
-        </div>
+    <h1>🌸 Админ-панель</h1>
+    
+    <div class="card">
+        <h3>📊 Статистика</h3>
+        <div class="stat" id="total">0</div>
+        <p>всего записей</p>
     </div>
     
+    <button onclick="refresh()">🔄 Обновить</button>
+    
     <script>
-        let tg = window.Telegram?.WebApp;
+        let tg = Telegram.WebApp;
+        tg.ready();
+        tg.expand();
         
-        // Инициализация Telegram WebApp
-        if (tg) {
-            tg.ready();
-            tg.expand();
-        }
-        
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('stats-tab').classList.add('hidden');
-            document.getElementById('bookings-tab').classList.add('hidden');
-            document.getElementById('dates-tab').classList.add('hidden');
-            
-            if (tab === 'stats') {
-                document.querySelectorAll('.tab')[0].classList.add('active');
-                document.getElementById('stats-tab').classList.remove('hidden');
-            } else if (tab === 'bookings') {
-                document.querySelectorAll('.tab')[1].classList.add('active');
-                document.getElementById('bookings-tab').classList.remove('hidden');
-            } else if (tab === 'dates') {
-                document.querySelectorAll('.tab')[2].classList.add('active');
-                document.getElementById('dates-tab').classList.remove('hidden');
-            }
-        }
-        
-        function refreshData() {
-            // Показываем загрузку
-            document.getElementById('bookings-list').innerHTML = '<div class="loading">Загрузка...</div>';
-            document.getElementById('dates-list').innerHTML = '<div class="loading">Загрузка...</div>';
-            
-            // Отправляем запрос боту
-            if (tg) {
-                tg.sendData('get_stats');
-            } else {
-                // Если не в Telegram, показываем тестовые данные
-                loadTestData();
-            }
-        }
-        
-        function loadTestData() {
-            const testData = {
-                total_bookings: 5,
-                unique_clients: 3,
-                upcoming: 2,
-                past: 3,
-                all_bookings: [
-                    {date: "20.05.2026", time: "10:00", username: "Анна"},
-                    {date: "21.05.2026", time: "14:00", username: "Мария"},
-                    {date: "22.05.2026", time: "11:00", username: "Елена"}
-                ],
-                bookings_by_date: {
-                    "20.05.2026": [{time: "10:00", username: "Анна"}],
-                    "21.05.2026": [{time: "14:00", username: "Мария"}],
-                    "22.05.2026": [{time: "11:00", username: "Елена"}]
-                }
-            };
-            updateDisplay(testData);
-        }
-        
-        function updateDisplay(data) {
-            try {
-                // Статистика
-                document.getElementById('total-bookings').textContent = data.total_bookings || 0;
-                document.getElementById('unique-clients').textContent = data.unique_clients || 0;
-                document.getElementById('upcoming').textContent = data.upcoming || 0;
-                document.getElementById('past').textContent = data.past || 0;
-                
-                // Все записи
-                if (data.all_bookings && data.all_bookings.length > 0) {
-                    let html = '';
-                    for (let b of data.all_bookings) {
-                        html += `
-                            <div class="booking-item">
-                                <div class="booking-date">📅 ${b.date}</div>
-                                <div class="booking-time">⏰ ${b.time}</div>
-                                <div class="booking-user">👤 ${b.username}</div>
-                            </div>
-                        `;
-                    }
-                    document.getElementById('bookings-list').innerHTML = html;
-                } else {
-                    document.getElementById('bookings-list').innerHTML = '<div class="loading">✨ Нет записей ✨</div>';
-                }
-                
-                // По датам
-                if (data.bookings_by_date && Object.keys(data.bookings_by_date).length > 0) {
-                    let html = '';
-                    for (let [date, bookings] of Object.entries(data.bookings_by_date)) {
-                        html += `<div class="booking-item"><div class="booking-date">📅 ${date}</div>`;
-                        for (let b of bookings) {
-                            html += `<div class="booking-time">⏰ ${b.time} - ${b.username}</div>`;
-                        }
-                        html += `</div>`;
-                    }
-                    document.getElementById('dates-list').innerHTML = html;
-                } else {
-                    document.getElementById('dates-list').innerHTML = '<div class="loading">✨ Нет записей ✨</div>';
-                }
-            } catch(e) {
-                console.error('Ошибка:', e);
-            }
+        function refresh() {
+            tg.sendData('get_stats');
         }
         
         // Функция для получения данных от бота
-        window.receiveTelegramData = function(data) {
-            updateDisplay(data);
+        window.receiveData = function(data) {
+            try {
+                let parsed = JSON.parse(data);
+                document.getElementById('total').textContent = parsed.total_bookings || 0;
+            } catch(e) {}
         };
-        
-        // Автоматически загружаем данные при открытии
-        setTimeout(refreshData, 1000);
     </script>
 </body>
 </html>
