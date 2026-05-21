@@ -167,14 +167,10 @@
             font-size: 12px;
         }
         
-        .sparkle {
-            display: inline-block;
-            animation: sparkle 1s ease infinite;
-        }
-        
-        @keyframes sparkle {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.2); }
+        .loading {
+            text-align: center;
+            color: #ff8fb5;
+            padding: 20px;
         }
     </style>
 </head>
@@ -194,7 +190,7 @@
         <div id="stats-tab">
             <div class="card">
                 <div class="card-title">📊 Статистика ✨</div>
-                <div class="stat-grid" id="stats-data">
+                <div class="stat-grid">
                     <div class="stat-item">
                         <div class="stat-number" id="total-bookings">0</div>
                         <div class="stat-label">Всего записей</div>
@@ -212,23 +208,23 @@
                         <div class="stat-label">Прошедших</div>
                     </div>
                 </div>
-                <button class="btn btn-secondary" onclick="sendRefresh()">🔄 Обновить</button>
+                <button class="btn btn-secondary" onclick="refreshData()">🔄 Обновить</button>
             </div>
         </div>
         
         <div id="bookings-tab" class="hidden">
             <div class="card">
                 <div class="card-title">📋 Все записи</div>
-                <div id="bookings-list">✨ Нет записей ✨</div>
-                <button class="btn btn-secondary" onclick="sendRefresh()">🔄 Обновить</button>
+                <div id="bookings-list" class="loading">✨ Загрузка... ✨</div>
+                <button class="btn btn-secondary" onclick="refreshData()">🔄 Обновить</button>
             </div>
         </div>
         
         <div id="dates-tab" class="hidden">
             <div class="card">
                 <div class="card-title">📅 Записи по датам</div>
-                <div id="dates-list">✨ Нет записей ✨</div>
-                <button class="btn btn-secondary" onclick="sendRefresh()">🔄 Обновить</button>
+                <div id="dates-list" class="loading">✨ Загрузка... ✨</div>
+                <button class="btn btn-secondary" onclick="refreshData()">🔄 Обновить</button>
             </div>
         </div>
         
@@ -238,7 +234,7 @@
     </div>
     
     <script>
-        let tg = window.Telegram?.WebApp;
+        let tg = Telegram.WebApp;
         
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -258,54 +254,75 @@
             }
         }
         
-        function sendRefresh() {
-            if (tg) {
-                tg.sendData('refresh');
+        function refreshData() {
+            // Показываем загрузку
+            document.getElementById('bookings-list').innerHTML = '✨ Загрузка... ✨';
+            document.getElementById('dates-list').innerHTML = '✨ Загрузка... ✨';
+            
+            // Отправляем запрос боту
+            tg.sendData('get_stats');
+        }
+        
+        function updateDisplay(data) {
+            try {
+                // Если data строка, парсим её
+                let parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+                
+                console.log("Получены данные:", parsedData);
+                
+                // Обновляем статистику
+                document.getElementById('total-bookings').textContent = parsedData.total_bookings || 0;
+                document.getElementById('unique-clients').textContent = parsedData.unique_clients || 0;
+                document.getElementById('upcoming').textContent = parsedData.upcoming || 0;
+                document.getElementById('past').textContent = parsedData.past || 0;
+                
+                // Обновляем список записей
+                if (parsedData.all_bookings && parsedData.all_bookings.length > 0) {
+                    document.getElementById('bookings-list').innerHTML = parsedData.all_bookings.map(b => `
+                        <div class="booking-item">
+                            <div class="booking-date">📅 ${b.date}</div>
+                            <div class="booking-time">⏰ ${b.time}</div>
+                            <div class="booking-user">👤 ${b.username}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    document.getElementById('bookings-list').innerHTML = '✨ Нет записей ✨';
+                }
+                
+                // Обновляем записи по датам
+                if (parsedData.bookings_by_date && Object.keys(parsedData.bookings_by_date).length > 0) {
+                    document.getElementById('dates-list').innerHTML = Object.entries(parsedData.bookings_by_date).map(([date, bookings]) => `
+                        <div class="booking-item">
+                            <div class="booking-date">📅 ${date}</div>
+                            ${bookings.map(b => `<div class="booking-time">⏰ ${b.time} - ${b.username}</div>`).join('')}
+                        </div>
+                    `).join('');
+                } else {
+                    document.getElementById('dates-list').innerHTML = '✨ Нет записей ✨';
+                }
+            } catch (e) {
+                console.error("Ошибка обработки данных:", e);
+                document.getElementById('bookings-list').innerHTML = '❌ Ошибка загрузки данных';
+                document.getElementById('dates-list').innerHTML = '❌ Ошибка загрузки данных';
             }
         }
         
-        function updateData(data) {
-            document.getElementById('total-bookings').textContent = data.total_bookings || 0;
-            document.getElementById('unique-clients').textContent = data.unique_clients || 0;
-            document.getElementById('upcoming').textContent = data.upcoming || 0;
-            document.getElementById('past').textContent = data.past || 0;
-            
-            if (data.all_bookings && data.all_bookings.length > 0) {
-                document.getElementById('bookings-list').innerHTML = data.all_bookings.map(b => `
-                    <div class="booking-item">
-                        <div class="booking-date">📅 ${b.date}</div>
-                        <div class="booking-time">⏰ ${b.time}</div>
-                        <div class="booking-user">👤 ${b.username}</div>
-                    </div>
-                `).join('');
-            } else {
-                document.getElementById('bookings-list').innerHTML = '✨ Нет записей ✨';
-            }
-            
-            if (data.bookings_by_date && Object.keys(data.bookings_by_date).length > 0) {
-                document.getElementById('dates-list').innerHTML = Object.entries(data.bookings_by_date).map(([date, bookings]) => `
-                    <div class="booking-item">
-                        <div class="booking-date">📅 ${date}</div>
-                        ${bookings.map(b => `<div class="booking-time">⏰ ${b.time} - ${b.username}</div>`).join('')}
-                    </div>
-                `).join('');
-            } else {
-                document.getElementById('dates-list').innerHTML = '✨ Нет записей ✨';
-            }
-        }
+        // Инициализация WebApp
+        tg.ready();
+        tg.expand();
         
-        if (tg) {
-            tg.ready();
+        // Ждём данные от бота
+        Telegram.WebApp.onEvent('viewportChanged', function() {
             tg.expand();
-            
-            Telegram.WebApp.onEvent('viewportChanged', function() {
-                tg.expand();
-            });
-        }
+        });
         
-        function receiveData(data) {
-            updateData(data);
-        }
+        // Получаем данные при открытии
+        refreshData();
+        
+        // Функция, которую будет вызывать бот
+        window.updateData = function(data) {
+            updateDisplay(data);
+        };
     </script>
 </body>
 </html>
