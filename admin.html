@@ -1,123 +1,27 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админ-панель</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #ffe6f0, #ffd9e8);
-            padding: 20px;
-            margin: 0;
-        }
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-        }
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-        }
-        button {
-            background: #ff6b9d;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 25px;
-            font-size: 16px;
-            width: 100%;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        .stat {
-            font-size: 32px;
-            font-weight: bold;
-            color: #ff6b9d;
-            text-align: center;
-        }
-        .debug {
-            background: #f0f0f0;
-            padding: 10px;
-            border-radius: 10px;
-            font-size: 12px;
-            margin-top: 10px;
-            word-break: break-all;
-        }
-    </style>
+    <title>Тест</title>
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <h2 style="text-align:center; color:#ff6b9d;">🌸 Админ-панель 🌸</h2>
-            <p style="text-align:center;">Статус: <span id="status">⏳ Загрузка...</span></p>
-        </div>
-        
-        <div class="card">
-            <h3>📊 Статистика</h3>
-            <div class="stat" id="total">0</div>
-            <p style="text-align:center;">всего записей</p>
-            <div class="stat" id="clients">0</div>
-            <p style="text-align:center;">клиентов</p>
-        </div>
-        
-        <div class="card">
-            <h3>📋 Последние записи</h3>
-            <div id="bookings">Нет записей</div>
-        </div>
-        
-        <button onclick="refreshData()">🔄 Обновить</button>
-        
-        <div class="debug" id="debug">
-            💡 Отладка:
-        </div>
-    </div>
+    <h1>Тест WebApp</h1>
+    <button onclick="sendTest()">Отправить тест</button>
+    <p id="result"></p>
     
     <script>
         let tg = Telegram.WebApp;
+        tg.ready();
         
-        function refreshData() {
-            document.getElementById('status').innerHTML = '🔄 Запрос отправлен...';
-            document.getElementById('debug').innerHTML = '📤 Отправляем запрос боту...';
-            tg.sendData('get_stats');
+        function sendTest() {
+            document.getElementById('result').innerHTML = 'Отправлено: test_message';
+            tg.sendData('test_message');
         }
         
-        // Функция, которую будет вызывать бот
-        window.updateData = function(data) {
-            document.getElementById('debug').innerHTML = '✅ Получены данные: ' + JSON.stringify(data);
-            document.getElementById('status').innerHTML = '✅ Данные загружены';
-            
-            if (data && data.total_bookings !== undefined) {
-                document.getElementById('total').innerHTML = data.total_bookings;
-                document.getElementById('clients').innerHTML = data.unique_clients;
-                
-                if (data.all_bookings && data.all_bookings.length > 0) {
-                    let html = '';
-                    for (let b of data.all_bookings.slice(0, 5)) {
-                        html += `<p>📅 ${b.date} | ⏰ ${b.time} | 👤 ${b.username}</p>`;
-                    }
-                    document.getElementById('bookings').innerHTML = html;
-                } else {
-                    document.getElementById('bookings').innerHTML = '✨ Нет записей ✨';
-                }
-            } else {
-                document.getElementById('debug').innerHTML = '❌ Ошибка: неверный формат данных';
-            }
+        // Функция для получения ответа от бота
+        window.receiveData = function(data) {
+            document.getElementById('result').innerHTML = 'Получено: ' + data;
         };
-        
-        // Инициализация
-        tg.ready();
-        tg.expand();
-        
-        document.getElementById('debug').innerHTML = '🔧 WebApp инициализирован, ждём данных...';
-        
-        // Автоматически запрашиваем данные при открытии
-        setTimeout(() => {
-            refreshData();
-        }, 1000);
     </script>
 </body>
 </html>
