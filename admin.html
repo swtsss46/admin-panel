@@ -10,18 +10,36 @@
     <p id="result"></p>
     
     <script>
-        let tg = Telegram.WebApp;
-        tg.ready();
+        // Ждём загрузки Telegram WebApp
+        let tg = window.Telegram?.WebApp;
         
-        function sendTest() {
-            document.getElementById('result').innerHTML = 'Отправлено: test_message';
-            tg.sendData('test_message');
+        if (!tg) {
+            document.getElementById('result').innerHTML = '❌ Ошибка: не удалось подключиться к Telegram';
+        } else {
+            tg.ready();
+            document.getElementById('result').innerHTML = '✅ Подключено к Telegram';
         }
         
-        // Функция для получения ответа от бота
-        window.receiveData = function(data) {
-            document.getElementById('result').innerHTML = 'Получено: ' + data;
-        };
+        function sendTest() {
+            if (!tg) {
+                document.getElementById('result').innerHTML = '❌ Telegram не подключён';
+                return;
+            }
+            
+            document.getElementById('result').innerHTML = '📤 Отправляю: test_123';
+            
+            try {
+                tg.sendData('test_123');
+                document.getElementById('result').innerHTML = '✅ Отправлено: test_123';
+            } catch(e) {
+                document.getElementById('result').innerHTML = '❌ Ошибка: ' + e.message;
+            }
+        }
+        
+        // Слушаем ответ от бота
+        tg?.onEvent('viewportChanged', function() {
+            console.log('viewport changed');
+        });
     </script>
 </body>
 </html>
